@@ -91,7 +91,33 @@ public class PatientDocumentsDao {
             pd.setResult(resultSet.getString("result"));
             pd.setComments(resultSet.getString("comments"));
             pd.setCreatedAt(resultSet.getDate("created_at"));
-          //  pd.setPatientId(resultSet.getInt("patient_id"));
+
+            PatientDao patientDao=new PatientDao(connection);
+            Patient patient= patientDao.get(resultSet.getInt("patient_id"));
+            pd.setPatient(patient);
+            list.add(pd);
+
+        }
+        return list;
+    }
+
+    public ArrayList<PatientDocuments> getByPatientID(int patianID) throws SQLException {
+        String sql = "select id, name, file, type, result, comments, created_at, patient_id from patient_documents where patient_id=?";
+        PreparedStatement st = connection.prepareStatement(sql);
+        ArrayList<PatientDocuments> list = new ArrayList<>();
+        st.setInt(1,patianID);
+        ResultSet resultSet = st.executeQuery();
+
+        while (resultSet.next()) {
+            PatientDocuments pd = new PatientDocuments();
+            pd.setId(resultSet.getInt("id"));
+            pd.setName(resultSet.getString("name"));
+            pd.setFile(resultSet.getString("file"));
+            pd.setType(resultSet.getString("type"));
+            pd.setResult(resultSet.getString("result"));
+            pd.setComments(resultSet.getString("comments"));
+            pd.setCreatedAt(resultSet.getDate("created_at"));
+            //  pd.setPatientId(resultSet.getInt("patient_id"));
             PatientDao patientDao=new PatientDao(connection);
             Patient patient= patientDao.get(resultSet.getInt("patient_id"));
             pd.setPatient(patient);

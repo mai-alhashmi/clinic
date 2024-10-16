@@ -4,8 +4,16 @@ public class Prescription {
 private int id;
 private String medicineName, dosage, duration;
 private Users user;
-
+private Patient patient;
     public Prescription() {
+    }
+
+    public Patient getPatient() {
+        return patient;
+    }
+
+    public void setPatient(Patient patient) {
+        this.patient = patient;
     }
 
     public int getId() {

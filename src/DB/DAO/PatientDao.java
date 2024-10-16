@@ -65,18 +65,20 @@ public class PatientDao {
         st.close();
     }
 
-    public Patient get(int id) throws SQLException {
+    public Patient get(int pid) throws SQLException {
         String sql = "select id,  name, gender,birth_date, address, phone, mobile, email, disease, " +
                 "medical_diagnosis, created_at, user_id,clinic_id from patients where id=?";
         PreparedStatement st = connection.prepareStatement(sql);
-        st.setInt(1, id);
+        st.setInt(1, pid);
         ResultSet resultSet = st.executeQuery();
 
         if (resultSet.next()) {
             Patient p = new Patient();
             p.setId(resultSet.getInt("id"));
             p.setName(resultSet.getString("name"));
-            // p.setGender(resultSet.getString("gender"));
+           String g= resultSet.getString("gender");
+            if (g.equals("male")) p.setGender(Patient.Gender.male);
+            else p.setGender(Patient.Gender.female);
             p.setBirthDate(resultSet.getDate("Birth_date"));
             p.setAddress(resultSet.getString("address"));
             p.setPhone(resultSet.getString("phone"));

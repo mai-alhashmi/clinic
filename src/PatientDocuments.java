@@ -11,7 +11,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class PatientDocuments extends JFrame {
+public class PatientDocuments extends JPanel {
     private JPanel panel1;
     private JPanel PanelNorth;
     private JTextField textFieldName;
@@ -31,16 +31,18 @@ public class PatientDocuments extends JFrame {
     private JLabel LabelResult;
     private DefaultTableModel dtm;
     private JTable table;
+    private Patient patient;
 
-    public PatientDocuments() {
+    public PatientDocuments(Patient patient) {
         this.setBounds(150, 100, 700, 500);
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-        this.getContentPane().add(panel1);
+//        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
+//        this.getContentPane().add(panel1);
         this.add(panel1);
+        this.patient=patient;
 
         //id, name, file, type, result, comments, created_at, patient_id
 
-        String[] columns = {"id", "name", "file", "type", "result", "comments", " created_at", " patient_id"};
+        String[] columns = {"id", "name", "file", "type", "result", "comments", " created_at", " patient"};
         dtm = new DefaultTableModel(null, columns);
         table = new JTable(dtm);
         Font font = new Font("Arial", Font.PLAIN, 20);
@@ -70,9 +72,10 @@ public class PatientDocuments extends JFrame {
                 patientDocuments.setType(comboBox1.getSelectedItem().toString());
                 PatientDao patientDao=new PatientDao(connection);
                 Patient patient= patientDao.get(Integer.parseInt(textFieldPatientId.getText()));
-                patientDocuments.setPatient(patient);
+                patientDocuments.setPatient(this.patient);
                 patientDocumentsDao.add(patientDocuments);
                 fillTable();
+
 
                 JOptionPane.showMessageDialog(this, "Patient Document added successfully");
             } catch (SQLException e) {
@@ -84,18 +87,20 @@ e.printStackTrace();
                 dtm.setRowCount(0);
                 try {
                     Connection pd = DbConfig.createdConnection();
+
                     PatientDocumentsDao patientDocumentsDao = new PatientDocumentsDao(pd);
-                    ArrayList<DB.PatientDocuments> documentsList = patientDocumentsDao.getAll();
+                    ArrayList<DB.PatientDocuments> documentsList = patientDocumentsDao.getByPatientID(this.patient.getId());
 
                     for (DB.PatientDocuments document : documentsList) {
                         String[] row = {
-                              //  document.getId();
+                                document.getId()+"",
                                 document.getName(),
                                 document.getFile(),
-                              //  document.getType(),
+                                document.getType(),
                                 document.getResult(),
                                 document.getComments(),
                                 document.getCreatedAt().toString(),
+                                document.getPatient().getName()
 
                         };
                         dtm.addRow(row);
@@ -105,38 +110,33 @@ e.printStackTrace();
 
                     JOptionPane.showMessageDialog(this, "");
                 }
-                buttonClear.addActionListener(e -> {
+        buttonClear.addActionListener(e -> {
 
-                    textFieldName.setText("");
-                    textFieldFile.setText("");
-                   textFieldResult.setText("");
-                    textFieldComments.setText("");
-                   textFieldCreatesAt.setText("");
-                   textFieldPatientId.setText("");
-                });
-                table.getModel().addTableModelListener(e -> {
-                    int row = e.getFirstRow();
-                    int col = e.getColumn();
-                    if (row >= 0 && row < table.getRowCount() && col >= 0 && col < table.getColumnCount()) {
-                        String value = (String) table.getValueAt(row, col);
-                        String patientDocuments = (String) table.getValueAt(row, 0);
-                        try {
-                            Connection pd = DbConfig.createdConnection();
-                           PatientDocumentsDao patientDocumentsDao = new PatientDocumentsDao(pd);
-                           pd.close();
-                        } catch (SQLException exception) {
-                            throw new RuntimeException();
-                        }
-                    }
-                });
-        }
-    public static void main(String[] args) {
-        PatientDocuments patientDocuments=new PatientDocuments();
-       patientDocuments.setVisible(true);
+            textFieldName.setText("");
+            textFieldFile.setText("");
+            textFieldResult.setText("");
+            textFieldComments.setText("");
+            textFieldCreatesAt.setText("");
+            textFieldPatientId.setText("");
+        });
+        table.getModel().addTableModelListener(e -> {
+            int row = e.getFirstRow();
+            int col = e.getColumn();
+            if (row >= 0 && row < table.getRowCount() && col >= 0 && col < table.getColumnCount()) {
+                String value = (String) table.getValueAt(row, col);
+                String patientDocuments = (String) table.getValueAt(row, 0);
+                try {
+                    Connection pd = DbConfig.createdConnection();
+                    PatientDocumentsDao patientDocumentsDao = new PatientDocumentsDao(pd);
+                    pd.close();
+                } catch (SQLException exception) {
+                    throw new RuntimeException();
+                }
+            }
+        });
     }
 
     public Component getPanel() {
         return null;
     }
 }
-

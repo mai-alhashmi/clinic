@@ -24,7 +24,7 @@ public class LoginFrame extends JFrame {
                 System.exit(1);
             }
             setTitle("Login");
-            setBounds(200, 150, 400, 300);
+            setBounds(300, 100, 500, 300);
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             setLayout(new GridBagLayout());
             GridBagConstraints c = new GridBagConstraints();

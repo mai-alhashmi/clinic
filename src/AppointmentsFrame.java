@@ -44,7 +44,6 @@ private Users user;
             throw new RuntimeException(e);
         }
 
-//        comboBoxPatient.setModel(dm);
         buttonSave.addActionListener(e -> {
             try {
                 save();
@@ -78,11 +77,10 @@ private Users user;
 //            PatientDao patientDao= new PatientDao(connection);
 //            Patient patient= patientDao.get(Integer.parseInt(textFieldPatientId.getText()));
           Patient patient = (Patient) comboBoxPatient.getSelectedItem();
-           appointments.setPatient(patient);
-              appointments.setUser(user);
+            appointments.setPatient(patient);
+            appointments.setUser(user);
 
             appointmentsDao.add(appointments);
-
             JOptionPane.showMessageDialog(this, "Appointment added successfully");
         } catch (SQLException e) {
             throw new RuntimeException(e);

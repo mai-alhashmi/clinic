@@ -6,6 +6,8 @@ import com.sun.tools.javac.Main;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.Connection;
@@ -13,12 +15,14 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
+import javax.swing.table.TableColumn;
+
 public class ShowClinicFrame extends JFrame {
 
     public ShowClinicFrame(Clinic clinic, Users user) {
         this.setBounds(150, 140, 700, 400);
         this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-
+      //  this.user=user;
         setTitle(clinic.getName() + " - " + clinic.getDoctorName() + " - " + clinic.getSpecialty());
        // JLabel labelUser = new JLabel("Welcome " + user.getName());
        // getContentPane().add(labelUser, BorderLayout.WEST);
@@ -78,6 +82,7 @@ public class ShowClinicFrame extends JFrame {
         buttonShowAllPatient.addActionListener(e -> {
             panel2.fillTable();
             cardLayout.show(panelCenter, "showAllPatients");
+
         });
         buttonAppointment.addActionListener(e -> {
 
@@ -100,11 +105,27 @@ public class ShowClinicFrame extends JFrame {
         public ShowAllPatientPanel(Clinic clinic) {
             this.setLayout(new BorderLayout());
             this.clinic = clinic;
-            String[] columns = {"ID", "Name", "Gender", "Birth Date", "Address", "Phone", "Mobile",
-                    "Email", "Disease", "Medical Diagnosis", "Created At", "Clinic ID"};
+            String[] columns = {"id", "name", "action", "gender", "birth_date", "address", "phone", "mobile", "email", "disease", "medical_diagnosis", "created_at" ,"clinic" };
 
             dtm = new DefaultTableModel(null, columns);
             table = new JTable(dtm);
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    int row = table.getSelectedRow();
+                    String pid =  table.getValueAt(row , 0).toString();
+                    Patient patient;
+                    try {
+                        Connection pa = DbConfig.createdConnection();
+                            PatientDao patientDao = new PatientDao(pa);
+                        patient = patientDao.get(Integer.parseInt(pid));
+                        FormDetails f = new FormDetails(patient);
+                        f.setVisible(true);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
             Font font = new Font("Arial", Font.PLAIN, 20);
             table.setFont(font);
             table.setForeground(Color.DARK_GRAY);
@@ -163,14 +184,12 @@ public class ShowClinicFrame extends JFrame {
                         dtm.removeRow(selectedRow);
                         JOptionPane.showMessageDialog(this, "Patient deleted successfully.");
                     } catch (SQLException exception) {
-                        JOptionPane.showMessageDialog(this, "exception");
+                        JOptionPane.showMessageDialog(this, "An error occurred: " + exception.getMessage());
                     }
                 }
             }
         }
     }
-
-
     class ShowAllAppointmentPanel extends JPanel {
         private DefaultTableModel dtm;
         private JTable table;
@@ -182,25 +201,65 @@ public class ShowClinicFrame extends JFrame {
             this.setLayout(new BorderLayout());
             this.clinic = clinic;
             setBackground(Color.YELLOW);
-            String[] columns = {"id", " appointment_date", " clinic_id", "patient_id", "medical_diagnosis",
+            String[] columns = {"id", " appointment_date", " clinic_id", "patient_id","patient Name", "medical_diagnosis",
                     "notes", "bill_amount", "user"};
             dtm = new DefaultTableModel(null, columns);
             table = new JTable(dtm);
+
+            JButton buttonDelete = new JButton("Delete");
+            this.add(buttonDelete, BorderLayout.SOUTH);
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    int row = table.getSelectedRow();
+                    String pid =  table.getValueAt(row , 3).toString();
+                    Patient patient;
+                    try {
+                        Connection pa = DbConfig.createdConnection();
+                       PatientDao patientDao =new PatientDao(pa);
+                        patient = patientDao.get(Integer.parseInt(pid));
+                        FormDetails f = new FormDetails(patient);
+                        f.setVisible(true);
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+            });
             Font font = new Font("Arial", Font.PLAIN, 20);
             table.setFont(font);
             table.setForeground(Color.DARK_GRAY);
             table.getTableHeader().setFont(font);
             table.getTableHeader().setBackground(new Color(100, 227, 212));
 
+            table.getTableHeader().setBackground(new Color(100, 227, 212));
+
             fillTable();
             JScrollPane scrollPane = new JScrollPane(table);
             this.add(scrollPane, BorderLayout.CENTER);
 
-            JButton buttonDelete = new JButton("Delete");
-            this.add(buttonDelete, BorderLayout.SOUTH);
-            //  buttonDelete.addActionListener(e -> deleteSelectedAppointment());
-        }
 
+            this.add(buttonDelete, BorderLayout.SOUTH);
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    int row = table.getSelectedRow();
+                    String pid =  table.getValueAt(row , 3).toString();
+                    Patient patient;
+                    try {
+                        Connection cn =DbConfig.createdConnection();
+                        PatientDao patientDAO =new   PatientDao(cn);
+                        patient = patientDAO.get(Integer.parseInt(pid));
+                       FormDetails f = new FormDetails(patient);
+                      f.setVisible(true);
+
+
+                    } catch (SQLException ex) {
+                        throw new RuntimeException(ex);
+                    }
+
+                }
+            });
+        }
         private void fillTable() {
             dtm.setRowCount(0);
             Connection a = null;

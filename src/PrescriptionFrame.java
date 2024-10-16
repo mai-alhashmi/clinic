@@ -1,6 +1,7 @@
 import DB.DAO.PrescriptionDao;
 import DB.DAO.UserDao;
 import DB.DbConfig;
+import DB.Patient;
 import DB.Prescription;
 import DB.Users;
 
@@ -11,7 +12,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class PrescriptionFrame extends JFrame {
+public class PrescriptionFrame extends JPanel {
     private JPanel panel1;
     private JPanel PanelNorth;
     private JPanel PanelWest;
@@ -23,22 +24,19 @@ public class PrescriptionFrame extends JFrame {
     private JLabel medicineName;
     private JLabel dosageLabel;
     private JLabel duration;
-    private JLabel userId;
     private JButton buttonClear;
     private JButton buttonDelete;
     private JButton buttonSave;
     private DefaultTableModel dtm;
     private JTable table;
+    private Patient patient;
 
+    public PrescriptionFrame(Patient patient) {
+        this.patient = patient;
+        setLayout(new BorderLayout());
+        this.add(panel1);
 
-public PrescriptionFrame() {
-    this.add(panel1);
-        this.setBounds(150, 50, 700, 600);
-        this.getContentPane().add(panel1);
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        this.setExtendedState(JFrame.MAXIMIZED_BOTH);
-
-        String[] columns = {"id", "medicine_name", "dosage", "duration", "user_id"};
+        String[] columns = {"id", "medicine_name", "dosage", "duration", "Patient"};
         dtm = new DefaultTableModel(null, columns);
         table = new JTable(dtm);
         Font font = new Font("Arial", Font.PLAIN, 20);
@@ -54,6 +52,7 @@ public PrescriptionFrame() {
         buttonDelete.addActionListener(e -> delete());
         buttonClear.addActionListener(e -> clearFields());
     }
+
     private void save() {
         try {
             Connection pr = DbConfig.createdConnection();
@@ -63,64 +62,41 @@ public PrescriptionFrame() {
             prescription.setMedicineName(textFieldMedicinName.getText());
             prescription.setDosage(textFieldDosage.getText());
             prescription.setDuration(textFieldDuration.getText());
-           // prescription.setUserId(Integer.parseInt(textFieldUserId.getText()));
+            prescription.setPatient(patient);
+
             prescriptionDao.add(prescription);
             fillTable();
             JOptionPane.showMessageDialog(this, "Prescription added successfully.");
         } catch (SQLException e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error saving prescription: " + e.getMessage());
         }
     }
+
     private void fillTable() {
         dtm.setRowCount(0);
         try {
             Connection pr = DbConfig.createdConnection();
             PrescriptionDao prescriptionDao = new PrescriptionDao(pr);
-
-            ArrayList<Prescription> prescriptions = prescriptionDao.get();
+            ArrayList<Prescription> prescriptions = prescriptionDao.getByPId(patient.getId());
             for (Prescription prescription : prescriptions) {
                 String[] row = {
                         String.valueOf(prescription.getId()),
                         prescription.getMedicineName(),
                         prescription.getDosage(),
                         prescription.getDuration(),
-                      //  String.valueOf(prescription.getUserId())
+                        prescription.getPatient().getName()
+
                 };
                 dtm.addRow(row);
             }
             pr.close();
         } catch (SQLException e) {
+            e.printStackTrace();
             JOptionPane.showMessageDialog(this, "Error loading prescriptions: " + e.getMessage());
         }
-        table.getModel().addTableModelListener(e -> {
-            int row = e.getFirstRow();
-            int col = e.getColumn();
-            if (row >= 0 && row < table.getRowCount() && col >= 0 && col < table.getColumnCount()) {
-                String newValue = (String) table.getValueAt(row, col);
-                int prescriptionId = Integer.parseInt((String) table.getValueAt(row, 0));
-
-                try {
-                    Connection pr = DbConfig.createdConnection();
-                    PrescriptionDao prescriptionDao = new PrescriptionDao(pr);
-                    Prescription prescription = prescriptionDao.get(prescriptionId);
-                    if (col == 1) {
-                        prescription.setMedicineName(newValue);
-                    } else if (col == 2) {
-                        prescription.setDosage(newValue);
-                    } else if (col == 3) {
-                        prescription.setDuration(newValue);
-                    } else if (col == 4) {
-                     //   prescription.setUserId(Integer.parseInt(newValue));
-                    }
-
-                    prescriptionDao.update(prescription); // تحديث الوصفة في قاعدة البيانات
-                    pr.close();
-                } catch (SQLException exception) {
-                    JOptionPane.showMessageDialog(this, "Error updating prescription: " + exception.getMessage());
-                }
-            }
-        });
     }
+
     private void delete() {
         int selectedRow = table.getSelectedRow();
         if (selectedRow != -1) {
@@ -138,6 +114,7 @@ public PrescriptionFrame() {
             JOptionPane.showMessageDialog(this, "No prescription selected to delete.");
         }
     }
+
     private void clearFields() {
         textFieldId.setText("");
         textFieldMedicinName.setText("");
@@ -145,9 +122,5 @@ public PrescriptionFrame() {
         textFieldDuration.setText("");
         textFieldUserId.setText("");
     }
-
-    public static void main(String[] args) {
-        PrescriptionFrame prescriptionFrame = new PrescriptionFrame();
-        prescriptionFrame.setVisible(true);
-        }
-    }
+}
+//
